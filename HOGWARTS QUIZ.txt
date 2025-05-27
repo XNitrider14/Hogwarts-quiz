@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hogwarts Sorting Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background: url('https://wallpaperaccess.com/full/2003064.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
+    }
+    .container {
+      padding: 50px 20px;
+    }
+    .house-corner {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      animation: float 3s infinite ease-in-out;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    #gryffindor { top: 10px; left: 10px; }
+    #slytherin { top: 10px; right: 10px; }
+    #ravenclaw { bottom: 10px; left: 10px; }
+    #hufflepuff { bottom: 10px; right: 10px; }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 1.2rem;
+      max-width: 500px;
+      margin: 0 auto 2rem;
+    }
+    button {
+      padding: 10px 30px;
+      font-size: 1.2rem;
+      background: #6b4226;
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .quiz, .result {
+      display: none;
+    }
+    .question-box {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      margin-top: 10px;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="home">
+    <img src="https://i.ibb.co/fYD6KMR/gryffindor.png" class="house-corner" id="gryffindor" />
+    <img src="https://i.ibb.co/DRw7jhr/slytherin.png" class="house-corner" id="slytherin" />
+    <img src="https://i.ibb.co/pZzpZ0B/ravenclaw.png" class="house-corner" id="ravenclaw" />
+    <img src="https://i.ibb.co/k6dhBrB/hufflepuff.png" class="house-corner" id="hufflepuff" />
+    <h1>Welcome to Hogwarts</h1>
+    <p>Let's sort you into your house...</p>
+    <button onclick="startQuiz()">Start</button>
+    <audio autoplay loop>
+      <source src="https://example.com/hp-theme.mp3" type="audio/mpeg" />
+    </audio>
+  </div>
+
+  <div class="container quiz" id="quiz">
+    <div class="question-box">
+      <h2 id="question"></h2>
+      <div id="options"></div>
+      <textarea placeholder="Extra comments..." id="comment"></textarea>
+    </div>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+  <div class="container result" id="result">
+    <h1 id="house-name"></h1>
+    <p id="house-description"></p>
+    <button onclick="restartQuiz()">Restart</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "How do you prefer to spend your weekend?",
+        options: [
+          { text: "Party with everyone!", house: "Gryffindor" },
+          { text: "Do something creative or productive with close friends", house: "Ravenclaw" },
+          { text: "Hang out and chill with close friends", house: "Hufflepuff" },
+          { text: "Spend time alone and plan future goals", house: "Slytherin" },
+        ]
+      },
+      {
+        q: "What trait defines you most?",
+        options: [
+          { text: "Bravery", house: "Gryffindor" },
+          { text: "Wisdom", house: "Ravenclaw" },
+          { text: "Kindness", house: "Hufflepuff" },
+          { text: "Ambition", house: "Slytherin" },
+        ]
+      },
+      // Add up to 20 varied and non-repeating questions with the same structure...
+    ];
+
+    const houseScores = { Gryffindor: 0, Ravenclaw: 0, Hufflepuff: 0, Slytherin: 0 };
+    let current = 0;
+    let maxQuestions = 10;
+    let used = [];
+
+    function startQuiz() {
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('quiz').style.display = 'block';
+      used = [];
+      current = 0;
+      houseScores.Gryffindor = 0;
+      houseScores.Ravenclaw = 0;
+      houseScores.Hufflepuff = 0;
+      houseScores.Slytherin = 0;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (current >= maxQuestions) return finishQuiz();
+
+      let index;
+      do {
+        index = Math.floor(Math.random() * questions.length);
+      } while (used.includes(index));
+      used.push(index);
+
+      const q = questions[index];
+      document.getElementById('question').textContent = q.q;
+
+      const options = document.getElementById('options');
+      options.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.text;
+        btn.onclick = () => selectOption(opt.house);
+        options.appendChild(btn);
+      });
+    }
+
+    function selectOption(house) {
+      houseScores[house]++;
+      current++;
+      if (Object.values(houseScores).some(v => v >= 5)) return finishQuiz();
+      showQuestion();
+    }
+
+    function nextQuestion() {
+      current++;
+      showQuestion();
+    }
+
+    function finishQuiz() {
+      document.getElementById('quiz').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+      const sorted = Object.entries(houseScores).sort((a,b) => b[1]-a[1]);
+      const house = sorted[0][0];
+
+      document.getElementById('house-name').textContent = `You belong in ${house}!`;
+      const desc = {
+        Gryffindor: "You're bold, brave, and the life of every room you walk into. You lead from the front and inspire others with your fierce energy.",
+        Ravenclaw: "Your wit and wisdom make you shine. You appreciate intellect and value time, often lost in thought or deep discussion.",
+        Hufflepuff: "You’re kind, warm, and friendly with a big heart. Though reserved, your loyalty and genuine love for close friends stands out.",
+        Slytherin: "You’re driven, ambitious, and powerful. You don't seek the spotlight, but you're always working on your next big move."
+      };
+      document.getElementById('house-description').textContent = desc[house];
+    }
+
+    function restartQuiz() {
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('home').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
